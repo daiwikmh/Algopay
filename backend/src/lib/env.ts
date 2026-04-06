@@ -7,6 +7,10 @@ const required = [
     'GOOGLE_CLIENT_ID',
     'GOOGLE_CLIENT_SECRET',
     'FRONTEND_URL',
+    'DEPLOYER_MNEMONIC',
+    'MERCHANT_REGISTRY_APP_ID',
+    'PAYMENT_PROCESSOR_APP_ID',
+    'PAYMENT_PROCESSOR_ADDRESS',
 ]
 
 export function validateEnv() {
