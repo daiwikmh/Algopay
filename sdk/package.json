@@ -1,0 +1,33 @@
+{
+  "name": "@algostack/sdk",
+  "version": "0.1.0",
+  "description": "AlgoStack SDK — Agentic Payments API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublish": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "algorand",
+    "payments",
+    "blockchain",
+    "usdc",
+    "agentic",
+    "web3"
+  ],
+  "author": "AlgoStack",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}
