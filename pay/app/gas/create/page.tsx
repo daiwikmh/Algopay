@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { api, ApiError } from "@/lib/api";
+import type { ApiKey } from "@/lib/types";
 
 export default function CreateGasPoolPage() {
   const router = useRouter();
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [loadingKeys, setLoadingKeys] = useState(true);
   const [form, setForm] = useState({
     apiKeyId: "",
     dailyCapCents: "",
@@ -16,6 +19,16 @@ export default function CreateGasPoolPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<ApiKey[]>("/keys")
+      .then((keys) => {
+        setApiKeys(keys);
+        if (keys[0]) setForm((f) => ({ ...f, apiKeyId: keys[0].id }));
+      })
+      .catch(() => {})
+      .finally(() => setLoadingKeys(false));
+  }, []);
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -29,7 +42,7 @@ export default function CreateGasPoolPage() {
       const dailyCapCents = parseInt(form.dailyCapCents);
       const alertMicroUsdc = String(Math.round(parseFloat(form.alertThresholdUsdc) * 1_000_000));
       await api.post("/gas-pool", {
-        apiKeyId: form.apiKeyId.trim(),
+        apiKeyId: form.apiKeyId,
         dailyCapCents,
         alertThresholdUsdc: alertMicroUsdc,
       });
@@ -68,14 +81,28 @@ export default function CreateGasPoolPage() {
         <section className="rounded-md border border-slate-800 bg-[#1d1f22] p-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm text-slate-300">API Key ID</label>
-              <input
-                required
-                value={form.apiKeyId}
-                onChange={(e) => set("apiKeyId", e.target.value)}
-                className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100 placeholder:text-slate-500"
-                placeholder="UUID of an existing API key"
-              />
+              <label className="mb-1 block text-sm text-slate-300">API Key</label>
+              {loadingKeys ? (
+                <div className="h-12 animate-pulse rounded-md bg-slate-800" />
+              ) : apiKeys.length === 0 ? (
+                <div className="rounded-md border border-amber-800 bg-amber-950/30 px-3 py-2 text-sm text-amber-300">
+                  No API keys found.{" "}
+                  <Link href="/settings" className="underline">Create one first.</Link>
+                </div>
+              ) : (
+                <select
+                  required
+                  value={form.apiKeyId}
+                  onChange={(e) => set("apiKeyId", e.target.value)}
+                  className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-sm text-slate-100"
+                >
+                  {apiKeys.map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.name} — {k.companyName} ({k.network})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -87,7 +114,7 @@ export default function CreateGasPoolPage() {
                 value={form.dailyCapCents}
                 onChange={(e) => set("dailyCapCents", e.target.value)}
                 className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100 placeholder:text-slate-500"
-                placeholder="e.g. 500000 = $5,000"
+                placeholder="e.g. 500000 = $5,000/day"
               />
             </div>
 
@@ -101,8 +128,11 @@ export default function CreateGasPoolPage() {
                 value={form.alertThresholdUsdc}
                 onChange={(e) => set("alertThresholdUsdc", e.target.value)}
                 className="h-12 w-full rounded-md border border-slate-700 bg-[#242629] px-3 text-slate-100 placeholder:text-slate-500"
-                placeholder="e.g. 50"
+                placeholder="e.g. 50 USDC"
               />
+              <p className="mt-1 text-xs text-slate-500">
+                You will be alerted when pool balance drops below this amount.
+              </p>
             </div>
 
             {error && <p className="text-sm text-rose-400">{error}</p>}
@@ -116,7 +146,7 @@ export default function CreateGasPoolPage() {
               </Link>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || apiKeys.length === 0}
                 className="rounded-md bg-btn-gradient px-4 py-2 text-xs uppercase text-slate-900 disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Create Pool"}
