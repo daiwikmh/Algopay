@@ -80,7 +80,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             alt="Logo"
             width={150}
             height={100}
-            className="h-8 w-8 rounded"
+            className=""
           />
 
           <div className="hidden items-center rounded-lg border border-slate-800 bg-[#212121] p-1 sm:flex">
