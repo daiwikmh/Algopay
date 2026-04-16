@@ -110,11 +110,12 @@ function NewPaymentModal({ onClose, onSuccess, activeAddress, signTransactions }
         { walletAddress: activeAddress }
       );
 
-      // 3. Decode txn[1] and sign with the connected wallet
-      const xferBytes = Uint8Array.from(Buffer.from(encodedTxns[1], "base64"));
-      const signed = await signTransactions([xferBytes]);
-      const signedBytes = signed[0];
-      if (!signedBytes) throw new Error("Wallet did not sign the transaction.");
+      // 3. Pass ALL group txns to the wallet — Pera requires the full group.
+      //    The wallet signs only txn[1] (sender = activeAddress) and returns null for the rest.
+      const allTxnBytes = encodedTxns.map((t) => Uint8Array.from(Buffer.from(t, "base64")));
+      const signed = await signTransactions(allTxnBytes);
+      const signedBytes = signed[1];
+      if (!signedBytes) throw new Error("Wallet did not sign the transfer transaction.");
       const walletSignedXferTxn = Buffer.from(signedBytes).toString("base64");
 
       // 4. Submit — backend signs txn[0] (lsig) and txn[2] (deployer), submits the group
