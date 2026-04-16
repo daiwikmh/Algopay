@@ -55,7 +55,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     const stored = loadStoredToken();
     if (stored) setApiToken(stored);
     try {
-      // auto-refresh in api.ts handles an expired token via the httpOnly cookie
       const me = await api.get<User>("/auth/me");
       setUser(me);
       if (typeof window !== "undefined") {
@@ -69,12 +68,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setReady(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, router]);
 
   useEffect(() => {
     bootstrap();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const logout = useCallback(async () => {
